@@ -1,0 +1,54 @@
+{% extends 'ranked/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Donner mon avis sur l'Université</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'soumettre_avis' %}">
+                    <!-- Jeton de sécurité obligatoire en Django -->
+                    {% csrf_token %}
+
+                    <!-- Pseudo -->
+                    <div class="mb-3">
+                        <label for="pseudo" class="form-label">Votre pseudo ou nom (anonyme) :</label>
+                        <input type="text" class="form-control" id="pseudo" name="user_anonymos" required maxlength="255" placeholder="Ex: JeanDupont">
+                    </div>
+
+                    <!-- Note -->
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Votre note :</label>
+                        <select class="form-select" id="note" name="rank" required>
+                            <option value="" disabled selected>Choisissez une note...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ (5/5) - Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ (4/5) - Très bien</option>
+                            <option value="3">⭐⭐⭐ (3/5) - Moyen</option>
+                            <option value="2">⭐⭐ (2/5) - Décevant</option>
+                            <option value="1">⭐ (1/5) - Très mauvais</option>
+                        </select>
+                    </div>
+
+                    <!-- Commentaire -->
+                    <div class="mb-3">
+                        <label for="commentaire" class="form-label">Votre commentaire :</label>
+                        <textarea class="form-control" id="commentaire" name="commentaire" rows="4" required placeholder="Partagez votre expérience..."></textarea>
+                    </div>
+
+                    <!-- Boutons -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-send"></i> Publier mon avis
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Depuis Postgres 18, le volume officiel est /var/lib/postgresql
+      # (avant la 18, on montait /var/lib/postgresql/data)
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_PASSWORD} -d ${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+      ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      DJANGO_SETTINGS_MODULE: "projvulg.settings"
+      DATABASE_URL: ${DATABASE_URL}
+     # GUNICORN_WORKERS: "4"  # remplace la valeur par défaut du Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  
