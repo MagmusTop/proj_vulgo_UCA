@@ -1,54 +1,90 @@
 {% extends 'ranked/base.html' %}
 
 {% block content %}
+<!-- 👇 On ajoute un peu de CSS spécifique pour les étoiles -->
+<style>
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    .star-rating input {
+        display: none; /* On cache les boutons radio */
+    }
+    .star-rating label {
+        cursor: pointer;
+        font-size: 2.5rem; /* Taille des étoiles */
+        color: #dee2e6; /* Gris clair par défaut (Bootstrap muted) */
+        transition: color 0.2s;
+        margin-bottom: 0;
+    }
+    /* 👇 La magie du CSS : quand on survole ou coche, les étoiles précédentes s'allument */
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #ffc107; /* Jaune Bootstrap (Warning) */
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h4 class="mb-0">Donner mon avis sur l'Université</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{% url 'soumettre_avis' %}">
-                    <!-- Jeton de sécurité obligatoire en Django -->
-                    {% csrf_token %}
-
-                    <!-- Pseudo -->
-                    <div class="mb-3">
-                        <label for="pseudo" class="form-label">Votre pseudo ou nom (anonyme) :</label>
-                        <input type="text" class="form-control" id="pseudo" name="user_anonymos" required maxlength="255" placeholder="Ex: JeanDupont">
-                    </div>
-
-                    <!-- Note -->
-                    <div class="mb-3">
-                        <label for="note" class="form-label">Votre note :</label>
-                        <select class="form-select" id="note" name="rank" required>
-                            <option value="" disabled selected>Choisissez une note...</option>
-                            <option value="5">⭐⭐⭐⭐⭐ (5/5) - Excellent</option>
-                            <option value="4">⭐⭐⭐⭐ (4/5) - Très bien</option>
-                            <option value="3">⭐⭐⭐ (3/5) - Moyen</option>
-                            <option value="2">⭐⭐ (2/5) - Décevant</option>
-                            <option value="1">⭐ (1/5) - Très mauvais</option>
-                        </select>
-                    </div>
-
-                    <!-- Commentaire -->
-                    <div class="mb-3">
-                        <label for="commentaire" class="form-label">Votre commentaire :</label>
-                        <textarea class="form-control" id="commentaire" name="commentaire" rows="4" required placeholder="Partagez votre expérience..."></textarea>
-                    </div>
-
-                    <!-- Boutons -->
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-send"></i> Publier mon avis
-                        </button>
-                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-                            Annuler
-                        </a>
-                    </div>
-                </form>
+        
+        <div class="alert alert-info d-flex align-items-center">
+            <i class="bi bi-incognito fs-4 me-2"></i>
+            <div>
+                Vous publiez en tant que <strong>{{ pseudo }}</strong>. 
+                Aucune donnée personnelle ne vous sera demandée.
             </div>
         </div>
+<!-- ... (garde le <style> et le haut du fichier) ... -->
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <!-- 👇 Titre dynamique -->
+        <h4 class="mb-0">{% if note_existante %}Modifier mon avis{% else %}Donner mon avis{% endif %}</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{% url 'soumettre_avis' %}">
+            {% csrf_token %}
+
+            <div class="mb-4 text-center">
+                <label class="form-label d-block mb-2 fw-bold">Votre note globale :</label>
+                <div class="star-rating d-flex justify-content-center">
+                    <!-- 👇 On coche l'étoile si elle correspond à la note existante -->
+                    <input type="radio" id="star5" name="note" value="5" {% if note_existante == 5 %}checked{% endif %} required />
+                    <label for="star5" class="bi bi-star-fill" title="Excellent (5/5)"></label>
+                    
+                    <input type="radio" id="star4" name="note" value="4" {% if note_existante == 4 %}checked{% endif %} />
+                    <label for="star4" class="bi bi-star-fill" title="Très bien (4/5)"></label>
+                    
+                    <input type="radio" id="star3" name="note" value="3" {% if note_existante == 3 %}checked{% endif %} />
+                    <label for="star3" class="bi bi-star-fill" title="Moyen (3/5)"></label>
+                    
+                    <input type="radio" id="star2" name="note" value="2" {% if note_existante == 2 %}checked{% endif %} />
+                    <label for="star2" class="bi bi-star-fill" title="Décevant (2/5)"></label>
+                    
+                    <input type="radio" id="star1" name="note" value="1" {% if note_existante == 1 %}checked{% endif %} />
+                    <label for="star1" class="bi bi-star-fill" title="Très mauvais (1/5)"></label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="commentaire" class="form-label">Votre commentaire (Optionnel) :</label>
+                <!-- 👇 On pré-remplit le textarea avec l'ancien texte -->
+                <textarea class="form-control" id="commentaire" name="commentaire" rows="4" placeholder="Partagez votre expérience (facultatif)...">{{ commentaire_existant }}</textarea>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <!-- 👇 Bouton dynamique -->
+                    <i class="bi bi-send"></i> {% if note_existante %}Mettre à jour{% else %}Publier{% endif %}
+                </button>
+                <a href="{% url 'accueil' %}" class="btn btn-outline-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
     </div>
 </div>
 {% endblock %}

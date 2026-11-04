@@ -1,0 +1,114 @@
+{% extends 'ranked/base.html' %}
+
+{% block content %}
+<!-- En-tête avec bouton d'ajout d'avis -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="h3 mb-0">Avis sur l'Université</h1>
+        <p class="text-muted">Découvrez ce que les étudiants pensent de nous.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <!-- 👇 Bouton dynamique -->
+        {% if mon_avis %}
+            <a href="{% url 'soumettre_avis' %}" class="btn btn-warning">
+                <i class="bi bi-pencil-square"></i> Modifier mon avis
+            </a>
+        {% else %}
+            <a href="{% url 'soumettre_avis' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Donner mon avis
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Le reste de ton dashboard reste inchangé -->
+
+<!-- 👇 Cartes de statistiques (c'est la partie qui manquait) -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Note moyenne</h5>
+                <h2 class="display-4">{{ note_moyenne }} / 5</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total des avis</h5>
+                <h2 class="display-4">{{ total_avis }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des avis -->
+<div class="row">
+    <div class="col-12">
+        <h3 class="h4 mb-3">Les derniers avis</h3>
+        
+        {% for avis in avis %}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <!-- Étoiles basées sur avis.note -->
+                    <div>
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= avis.note %}
+                                <i class="bi bi-star-fill text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-star text-muted"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="ms-2 text-muted small">({{ avis.note }}/5)</span>
+                    </div>
+                    <!-- Auteur (le pseudo anonyme) -->
+                    <small class="text-muted">
+                        Par <strong>{{ avis.user_anonymos }}</strong>
+                        <span class="ms-2">
+                            {% if avis.modified_at|date:"YmdHi" != avis.created_at|date:"YmdHi" %}
+                                (Modifié le {{ avis.modified_at|date:"d/m/Y à H:i" }})
+                            {% else %}
+                                (Publié le {{ avis.created_at|date:"d/m/Y à H:i" }})
+                            {% endif %}
+                        </span>
+                    </small>
+                </div>
+                
+                <!-- On affiche le commentaire seulement s'il existe -->
+                {% if avis.comment and avis.comment.text %}
+                    <p class="card-text">{{ avis.comment.text }}</p>
+                {% else %}
+                    <p class="card-text text-muted fst-italic">Aucun commentaire laissé.</p>
+                {% endif %}
+                
+                <!-- Boutons de vote (uniquement si un commentaire existe) -->
+               <!-- Boutons de vote -->
+                {% if avis.comment %}
+                <hr>
+                <div class="d-flex gap-3">
+                    <!-- 👇 On utilise agree_count généré par l'annotate -->
+                    <a href="{% url 'voter_avis' avis.id 'agree' %}" 
+                    class="btn btn-sm {% if avis.comment.id in agree_ids %}btn-success{% else %}btn-outline-success{% endif %}">
+                        <i class="bi bi-hand-thumbs-up"></i> D'accord ({{ avis.agree_count }})
+                    </a>
+                    
+                    <!-- 👇 On utilise disagree_count -->
+                    <a href="{% url 'voter_avis' avis.id 'not_agree' %}" 
+                    class="btn btn-sm {% if avis.comment.id in disagree_ids %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                        <i class="bi bi-hand-thumbs-down"></i> Pas d'accord ({{ avis.disagree_count }})
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            Aucun avis pour le moment. Soyez le premier à donner votre opinion !
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
