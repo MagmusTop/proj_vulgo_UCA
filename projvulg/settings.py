@@ -43,7 +43,7 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://dog-make-employer-testing.trycloudflare.com",
+    "https://"+os.getenv("cloudlflared"),
 ]
 
 # Application definition
@@ -73,7 +73,7 @@ ROOT_URLCONF = 'projvulg.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

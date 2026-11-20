@@ -31,6 +31,7 @@ Variables utilisées :
 | `DB_PORT` | Port PostgreSQL |
 | `SECRET_KEY` | Clé secrète Django, à générer et garder privée |
 | `DEBUG` | Active ou désactive le mode debug Django |
+| `cloudlflared`| Lien du site, sans le site sera inacessible hors la machine en local|
 | `DJANGO_ALLOWED_HOSTS` | Liste des hôtes autorisés, séparés par des virgules |
 | `DATABASE_URL` | URL également fournie par Compose ; Django lit les paramètres `DB_*` ci-dessus |
 
@@ -43,11 +44,13 @@ Depuis la racine du dépôt, après avoir configuré `.env` :
 
 ```sh
 docker compose up --build -d
+docker compose exec web python manage.py makemigrations
 docker compose exec web python manage.py migrate
 ```
 
-Ouvrez ensuite [http://localhost:8000](http://localhost:8000). Pour suivre les
-journaux :
+Ouvrez ensuite [http://localhost:8000](http://localhost:8000) ou le lien du site. 
+
+Pour suivre les journaux :
 
 ```sh
 docker compose logs -f web

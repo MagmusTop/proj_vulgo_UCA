@@ -1,0 +1,215 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .dash-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .dash-card {
+    background: var(--body-bg);
+    border: 1px solid var(--hairline-color);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+  }
+  .dash-card__label { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; opacity: .6; }
+  .dash-card__value { font-size: 2rem; font-weight: 700; margin-top: .3rem; }
+  .dash-card__value small { font-size: 1rem; opacity: .5; font-weight: 400; }
+
+  .dash-charts {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 900px) {
+    .dash-charts { grid-template-columns: 1fr; }
+  }
+  .dash-chart {
+    background: var(--body-bg);
+    border: 1px solid var(--hairline-color);
+    border-radius: 10px;
+    padding: 1rem;
+    position: relative;
+    height: 300px;
+  }
+  .dash-chart h3 {
+    margin: 0 0 .8rem 0;
+    font-size: .95rem;
+    font-weight: 600;
+    opacity: .8;
+  }
+  .dash-chart canvas { max-height: 240px; }
+
+  .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 900px) { .dash-row { grid-template-columns: 1fr; } }
+
+  .dash-comments ul { list-style: none; margin: 0; padding: 0; }
+  .dash-comments li {
+    padding: .6rem 0;
+    border-bottom: 1px solid var(--hairline-color);
+    font-size: .9rem;
+  }
+  .dash-comments li:last-child { border-bottom: none; }
+  .dash-comments time { color: var(--body-quiet-color); font-size: .8rem; margin-left: .5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+  <!-- KPI -->
+  <div class="dash-cards">
+    <div class="dash-card">
+      <div class="dash-card__label">Visiteurs</div>
+      <div class="dash-card__value">{{ total_visitors }}</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card__label">Commentaires</div>
+      <div class="dash-card__value">{{ total_comments }}</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card__label">Votes</div>
+      <div class="dash-card__value">{{ total_votes }}</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card__label">Note moyenne</div>
+      <div class="dash-card__value">{{ avg_note }} <small>/ 5</small></div>
+    </div>
+  </div>
+
+  <!-- Graphiques principaux -->
+  <div class="dash-charts">
+    <div class="dash-chart">
+      <h3>Visiteurs — 7 derniers jours</h3>
+      <canvas id="visitorsChart"></canvas>
+    </div>
+    <div class="dash-chart">
+      <h3>Répartition des votes</h3>
+      <canvas id="votesChart"></canvas>
+    </div>
+  </div>
+
+  <div class="dash-row">
+    <div class="dash-chart" style="height: 320px;">
+      <h3>Distribution des notes</h3>
+      <canvas id="notesChart"></canvas>
+    </div>
+
+    <div class="module dash-comments">
+      <h2>Derniers commentaires</h2>
+      {% if latest_comments %}
+        <ul>
+          {% for c in latest_comments %}
+            <li>
+              {{ c.text|default:"(vide)"|truncatechars:80 }}
+              <time>{{ c.created_at|date:"d/m/Y H:i" }}</time>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>Aucun commentaire pour l'instant.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Section "applications" par défaut pour la navigation -->
+  <div class="module" style="margin-top: 1.5rem;">
+    <h2>Gestion des données</h2>
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+  </div>
+
+</div>
+
+<!-- Données JSON injectées par Django -->
+{{ chart_labels|json_script:"chart-labels" }}
+{{ chart_visitors|json_script:"chart-visitors" }}
+{{ note_labels|json_script:"note-labels" }}
+{{ note_values|json_script:"note-values" }}
+{{ vote_labels|json_script:"vote-labels" }}
+{{ vote_values|json_script:"vote-values" }}
+
+<script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script data-cfasync="false">
+  const load = id => JSON.parse(document.getElementById(id).textContent);
+
+  const labelsVisitors = load("chart-labels");
+  const dataVisitors   = load("chart-visitors");
+  const labelsNotes    = load("note-labels");
+  const dataNotes      = load("note-values");
+  const labelsVotes    = load("vote-labels");
+  const dataVotes      = load("vote-values");
+
+  const PRIMARY   = "#417690";
+  const SECONDARY = "#79aec8";
+
+  // 1) Visiteurs sur 7 jours
+  new Chart(document.getElementById("visitorsChart"), {
+    type: "line",
+    data: {
+      labels: labelsVisitors,
+      datasets: [{
+        label: "Visiteurs",
+        data: dataVisitors,
+        borderColor: PRIMARY,
+        backgroundColor: "rgba(65,118,144,.15)",
+        fill: true,
+        tension: .3,
+        pointRadius: 4,
+        pointBackgroundColor: PRIMARY,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  // 2) Distribution des notes
+  new Chart(document.getElementById("notesChart"), {
+    type: "bar",
+    data: {
+      labels: labelsNotes,
+      datasets: [{
+        label: "Nombre de visiteurs",
+        data: dataNotes,
+        backgroundColor: [SECONDARY, "#9ec5da", PRIMARY, "#2b5466", "#183a48"],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  // 3) Votes
+  new Chart(document.getElementById("votesChart"), {
+    type: "doughnut",
+    data: {
+      labels: labelsVotes,
+      datasets: [{
+        data: dataVotes,
+        backgroundColor: ["#2e8b57", "#c0392b"],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" }
+      }
+    }
+  });
+</script>
+{% endblock %}

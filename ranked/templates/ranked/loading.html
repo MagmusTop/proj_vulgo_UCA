@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenue</title>
+    <noscript>
+        <meta http-equiv="refresh" content="3;url={% url 'soumettre_avis' %}">
+    </noscript>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff; font-family: 'Segoe UI', Roboto, sans-serif;
+            text-align: center; padding: 2rem;
+        }
+        h1 {
+            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            margin-bottom: 2.5rem; font-weight: 600;
+            animation: fadeIn .8s ease-in;
+        }
+        .spinner {
+            width: 64px; height: 64px;
+            border: 6px solid rgba(255,255,255,.25);
+            border-top-color: #fff; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .subtitle { margin-top: 1.5rem; opacity: .8; font-size: .95rem; }
+        @keyframes spin   { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } }
+    </style>
+</head>
+<body>
+    <h1>Bienvenue dans la zone commentaire de l'IUT</h1>
+    <div class="spinner"></div>
+    <p class="subtitle">Redirection vers la page de notation…</p>
+
+    <script>
+        setTimeout(function () {
+            window.location.replace("{% url 'soumettre_avis' %}");
+        }, 2500);   // 2,5 secondes
+    </script>
+</body>
+</html>

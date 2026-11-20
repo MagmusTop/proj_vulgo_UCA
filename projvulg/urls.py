@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from ranked import urls
+from ranked.admin import dashboard_site
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", dashboard_site.urls), 
+    #path('admin/', admin.site.urls),
     path('', include('ranked.urls')),  # 👈 On branche l'app 'ranked'
 ]

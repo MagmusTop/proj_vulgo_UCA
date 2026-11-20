@@ -43,6 +43,61 @@
     </div>
 </div>
 
+<!-- Filtres de tri -->
+<div class="row mb-3 align-items-center">
+
+    <div class="col-md-6">
+        <h3 class="h4 mb-0">Les avis étudiants</h3>
+        <small class="text-muted">
+            Consultez les avis selon vos préférences.
+        </small>
+    </div>
+
+    <div class="col-md-6 mt-3 mt-md-0">
+        <form method="GET" class="d-flex align-items-center gap-2">
+
+            <label for="tri" class="form-label mb-0">
+                Trier par :
+            </label>
+
+            <select
+                name="tri"
+                id="tri"
+                class="form-select"
+                onchange="this.form.submit()"
+            >
+                <option value="recent"
+                    {% if tri_actuel == 'recent' %}selected{% endif %}>
+                    Plus récents
+                </option>
+
+                <option value="note_desc"
+                    {% if tri_actuel == 'note_desc' %}selected{% endif %}>
+                    notes (du meilleur au pire)
+                </option>
+
+                <option value="note_asc"
+                    {% if tri_actuel == 'note_asc' %}selected{% endif %}>
+                    notes (du pire au meilleur)
+                </option>
+
+                <option value="agree_desc"
+                    {% if tri_actuel == 'agree_desc' %}selected{% endif %}>
+                    Plus approuvés
+                </option>
+
+                <option value="agree_asc"
+                    {% if tri_actuel == 'agree_asc' %}selected{% endif %}>
+                    Moins approuvés
+                </option>
+
+            </select>
+
+        </form>
+    </div>
+
+</div>
+
 <!-- Liste des avis -->
 <div class="row">
     <div class="col-12">
